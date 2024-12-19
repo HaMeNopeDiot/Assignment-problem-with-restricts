@@ -12,7 +12,7 @@ BASE = dm
 CC = clang++
 
 CFLAGS = -Og -g3 -Wall -I$(SRC_DIR)
-LDFLAGS = -lSDL2main -lSDL2  # Добавляем флаги для линковки с SDL2
+LDFLAGS = 
 
 OBJ_DIR_EX := $(shell mkdir -p $(OBJ_DIR) && echo $(OBJ_DIR))
 

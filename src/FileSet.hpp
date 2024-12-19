@@ -26,11 +26,11 @@ class FileSet {
             size_t dimension;
             file >> dimension;
             
-            std::vector<std::vector<int16_t>> data;
+            std::vector<std::vector<uint16_t>> data;
             for(size_t index = 0; index < dimension; index++) {
-                std::vector<int16_t> data_row;
+                std::vector<uint16_t> data_row;
                 for(size_t jndex = 0; jndex < dimension; jndex++) {
-                    int16_t data_tmp;
+                    uint16_t data_tmp;
                     file >> data_tmp;
                     data_row.push_back(data_tmp);
                 }

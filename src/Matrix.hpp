@@ -8,40 +8,57 @@
 
 #define SPACE_FOR_NUMBERS 3
 
-int16_t get_random_uint(int16_t start = 1, int16_t end = 10) {
+uint16_t get_random_uint(uint16_t start = 1, uint16_t end = 10) {
     return (start + rand() % end);
 }
 
 class Matrix {
     // Data in matrix
-    std::vector<std::vector<int16_t>> data;
+    std::vector<std::vector<uint16_t>> data;
     // Sizes of matrix
     size_t rows;
     size_t cols;
 
     public:
     
-    Matrix(size_t size) : rows(size), cols(size)              { data.resize(size, std::vector<int16_t>(size, 0.0f)); }
-    Matrix(size_t rows, size_t cols) : rows(rows), cols(cols) { data.resize(cols, std::vector<int16_t>(rows, 0.0f)); }
-    Matrix(size_t rows, size_t cols, std::vector<std::vector<int16_t>> *new_data) : rows(rows), cols(cols) {
+    Matrix(size_t size) : rows(size), cols(size)              { data.resize(size, std::vector<uint16_t>(size, 0.0f)); }
+    Matrix(size_t rows, size_t cols) : rows(rows), cols(cols) { data.resize(cols, std::vector<uint16_t>(rows, 0.0f)); }
+    Matrix(size_t rows, size_t cols, std::vector<std::vector<uint16_t>> *new_data) : rows(rows), cols(cols) {
         data = *new_data;   
     }
 
     size_t getRows() { return rows; }
     size_t getCols() { return cols; }
 
-    int8_t setCell(int16_t val, size_t row, size_t col)
-    {
-        if(row < rows && col < cols) {
-            data[row][col] = val;
+    size_t getDim() {
+        if(isSquareMatrix()) {
+            return rows;
+        } else {
             return 0;
+        }
+    }
+
+    bool isCellRestricted(size_t row, size_t col) {
+        return (data[row][col] == std::numeric_limits<uint16_t>::max());
+    }
+
+    int8_t setCell(size_t row, size_t col, uint16_t val) {
+        if(row < rows && col < cols) {
+            if(!isCellRestricted(row, col)) {
+                data[row][col] = val;
+                return 0;
+            } else {
+                std::cout << "Restricted cell!" << std::endl;
+                return -2;
+            }
+
         } else {
             std::cout << "No such cell!" << std::endl;
             return -1;
         }
     }
 
-    int16_t getCell(size_t row, size_t col)
+    uint16_t getCell(size_t row, size_t col)
     {
         if(row < rows && col < cols) {
             return data[row][col];
@@ -53,7 +70,7 @@ class Matrix {
 
     bool isSquareMatrix() { return (cols == rows); }
 
-    void randomizeAllMatrix(int16_t start = 1, int16_t end = 10)
+    void randomizeAllMatrix(uint16_t start = 1, uint16_t end = 10)
     {
         for(size_t index = 0; index < rows; index++) {
             for(size_t jndex = 0; jndex < cols; jndex++) {
@@ -62,7 +79,7 @@ class Matrix {
         }
     }
 
-    void printMatrix() {
+    void printMatrix(size_t visibleX = 0) {
         std::cout<< char(0xDA); // "┌";
         // Upper edge
         for(size_t index = 0; index < cols; index++) {
@@ -78,7 +95,7 @@ class Matrix {
         for(size_t index = 0; index < rows; index++) {
             for(size_t jndex = 0; jndex < cols; jndex++) {
                 std::cout << char(0xB3) << std::setw(SPACE_FOR_NUMBERS);
-                if(data[index][jndex] >= 0) {
+                if(!isCellRestricted(index, jndex) || visibleX) {
                     std::cout << data[index][jndex]; //  "│"
                 } else {
                     std::cout << "x";
@@ -114,13 +131,13 @@ class Matrix {
         }
     }
 
-    int16_t getMinInRow(size_t row)
+    uint16_t getMinInRow(size_t row)
     {
         if(row < rows) {
-            int16_t min_row = data[row][0];
+            uint16_t min_row = data[row][0];
             for(size_t index = 1; index < cols; index++) {
-                int16_t cur_data = data[row][index];
-                min_row = (min_row > cur_data)? cur_data: min_row;
+                uint16_t cur_data = data[row][index];
+                min_row = (min_row < 0) || ((min_row > cur_data) && (cur_data >= 0))? cur_data: min_row;
             }
             return min_row;
         } else {
@@ -129,13 +146,13 @@ class Matrix {
         }
     }
 
-    int16_t getMinInCol(size_t col)
+    uint16_t getMinInCol(size_t col)
     {
         if(col < cols) {
-            int16_t min_col = data[0][col];
+            uint16_t min_col = data[0][col];
             for(size_t index = 1; index < rows; index++) {
-                int16_t cur_data = data[index][col];
-                min_col = (min_col > cur_data)? cur_data: min_col;
+                uint16_t cur_data = data[index][col];
+                min_col = (min_col < 0) || ((min_col > cur_data) && (cur_data >= 0))? cur_data: min_col;
             }
             return min_col;
         } else {
