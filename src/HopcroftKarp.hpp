@@ -6,7 +6,7 @@
 
 class HopcroftKarp {
 private:
-    int16_t n, m; // Количество вершин в каждой части двудольного графа
+    int16_t n; // Количество вершин в каждой части двудольного графа
     std::vector<std::vector<int16_t>> adj; // Список смежности
     std::vector<int16_t> pairU, pairV, dist;
 
@@ -41,14 +41,20 @@ private:
     bool dfs(int16_t u) {
         for (int16_t v : adj[u]) {
             if (pairV[v] == -1 || (dist[pairV[v]] == dist[u] + 1 && dfs(pairV[v]))) {
-                if(pairU[u] == -1) {
-                    pair.push_back({u, v});
-                }
                 // std::cout << "Debug: " << pairV[v] << "." << pairU[u];
                 pairU[u] = v;
                 pairV[v] = u;
                 // std::cout << " Debug: " << pairV[v] << "." << pairU[u] << std::endl;
-                
+                bool newPair = true;
+                for(size_t i = 0; i < pair.size() && newPair; i++) {
+                    if(pair[i][0] == u) {
+                        pair[i] = {u, v};
+                        newPair = false;
+                    }
+                }
+                if(newPair) {
+                    pair.push_back({u, v});
+                }
                 
                 return true;
             }
@@ -58,7 +64,7 @@ private:
     }
 
 public:
-    HopcroftKarp(int n, int m) : n(n), m(m), adj(n), pairU(n, -1), pairV(m, -1), dist(n) {}
+    HopcroftKarp(int n) : n(n), adj(n), pairU(n, -1), pairV(n, -1), dist(n) {}
 
     void addEdge(int16_t u, int16_t v) {
         adj[u].push_back(v);
@@ -80,11 +86,11 @@ public:
 };
 
 int testHK() {
-    int n, m; // Количество вершин в каждой части
+    int n; // Количество вершин в каждой части
     std::cout << "Введите количество вершин в первой части и второй части: ";
-    std::cin >> n >> m;
+    std::cin >> n;
 
-    HopcroftKarp hk(n, m);
+    HopcroftKarp hk(n);
     
     std::cout << "Введите количество рёбер: ";
     int edges;

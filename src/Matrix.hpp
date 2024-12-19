@@ -21,8 +21,8 @@ class Matrix {
 
     public:
     
-    Matrix(size_t size) : rows(size), cols(size)              { data.resize(size, std::vector<uint16_t>(size, 0.0f)); }
-    Matrix(size_t rows, size_t cols) : rows(rows), cols(cols) { data.resize(cols, std::vector<uint16_t>(rows, 0.0f)); }
+    Matrix(size_t size) : rows(size), cols(size)              { data.resize(size, std::vector<uint16_t>(size, 0)); }
+    Matrix(size_t rows, size_t cols) : rows(rows), cols(cols) { data.resize(cols, std::vector<uint16_t>(rows, 0)); }
     Matrix(size_t rows, size_t cols, std::vector<std::vector<uint16_t>> *new_data) : rows(rows), cols(cols) {
         data = *new_data;   
     }
@@ -48,7 +48,7 @@ class Matrix {
                 data[row][col] = val;
                 return 0;
             } else {
-                std::cout << "Restricted cell!" << std::endl;
+                // std::cout << "Restricted cell!" << std::endl;
                 return -2;
             }
 
@@ -80,21 +80,21 @@ class Matrix {
     }
 
     void printMatrix(size_t visibleX = 0) {
-        std::cout<< char(0xDA); // "┌";
+        std::cout<< "┌"; // "┌";
         // Upper edge
         for(size_t index = 0; index < cols; index++) {
             for(size_t jndex = 0; jndex < SPACE_FOR_NUMBERS; jndex++) {
-                std::cout << char(0xC4); // "―";
+                std::cout << "―"; // "―";
             }
             if(index == cols - 1) {
-                std::cout << char(0xBF) << std::endl; // "┐"
+                std::cout << "┐" << std::endl; // "┐"
             } else {
-                std::cout << char(0xC2); // "┬";
+                std::cout << "┬"; // "┬";
             }
         }
         for(size_t index = 0; index < rows; index++) {
             for(size_t jndex = 0; jndex < cols; jndex++) {
-                std::cout << char(0xB3) << std::setw(SPACE_FOR_NUMBERS);
+                std::cout << "│" << std::setw(SPACE_FOR_NUMBERS);
                 if(!isCellRestricted(index, jndex) || visibleX) {
                     std::cout << data[index][jndex]; //  "│"
                 } else {
@@ -103,27 +103,27 @@ class Matrix {
             }
             // start cut the cells
             if(index == rows - 1) {
-                std::cout << char(0xB3) << std::endl << char(0xC0); 
+                std::cout << "│" << std::endl << "└"; 
             } else {
-                std::cout << char(0xB3) << std::endl << char(0xC3); //"├";
+                std::cout << "│" << std::endl << "├"; //"├";
             }
             /* Line between two rows */
             for(size_t jndex = 0; jndex < cols; jndex++) {
                 for(size_t kndex = 0; kndex < SPACE_FOR_NUMBERS; kndex++) {
-                    std::cout << char(0xC4); // "―";
+                    std::cout << "―"; // "―";
                 }
                 // Is the end of matrix?
                 if(index == rows - 1) {
                     if(jndex == cols - 1) {
-                        std::cout << char(0xD9);
+                        std::cout << "┘";
                     } else {
-                        std::cout << char(0xC1); // "┴";
+                        std::cout << "┴"; // "┴";
                     }
                 } else {
                     if(jndex == cols - 1) {
-                        std::cout << char(0xB4);
+                        std::cout << "┤";
                     } else {
-                        std::cout << char(0xC5); // "┼";
+                        std::cout << "┼"; // "┼";
                     }
                 }
             }
