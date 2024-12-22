@@ -7,6 +7,7 @@
 
 
 #define SPACE_FOR_NUMBERS 3
+#define CONVERT_PRINT_TO_FILE 1
 
 uint16_t get_random_uint(uint16_t start = 1, uint16_t end = 10) {
     return (start + rand() % end);
@@ -79,7 +80,7 @@ class Matrix {
         }
     }
 
-    void printMatrix(size_t visibleX = 0) {
+    void printMatrixFile(size_t visibleX = 0) {
         std::cout<< "┌"; // "┌";
         // Upper edge
         for(size_t index = 0; index < cols; index++) {
@@ -131,6 +132,66 @@ class Matrix {
         }
     }
 
+    void printMatrixConsole(size_t visibleX = 0) {
+        std::cout<< char(0xDA); // "┌";
+        // Upper edge
+        for(size_t index = 0; index < cols; index++) {
+            for(size_t jndex = 0; jndex < SPACE_FOR_NUMBERS; jndex++) {
+                std::cout << char(0xC4); // "―";
+            }
+            if(index == cols - 1) {
+                std::cout << char(0xBF) << std::endl; // "┐"
+            } else {
+                std::cout << char(0xC2); // "┬";
+            }
+        }
+        for(size_t index = 0; index < rows; index++) {
+            for(size_t jndex = 0; jndex < cols; jndex++) {
+                std::cout << char(0xB3) << std::setw(SPACE_FOR_NUMBERS);
+                if(!isCellRestricted(index, jndex) || visibleX) {
+                    std::cout << data[index][jndex]; //  "│"
+                } else {
+                    std::cout << "x";
+                }
+            }
+            // start cut the cells
+            if(index == rows - 1) {
+                std::cout << char(0xB3) << std::endl << char(0xC0); 
+            } else {
+                std::cout << char(0xB3) << std::endl << char(0xC3); //"├";
+            }
+            /* Line between two rows */
+            for(size_t jndex = 0; jndex < cols; jndex++) {
+                for(size_t kndex = 0; kndex < SPACE_FOR_NUMBERS; kndex++) {
+                    std::cout << char(0xC4); // "―";
+                }
+                // Is the end of matrix?
+                if(index == rows - 1) {
+                    if(jndex == cols - 1) {
+                        std::cout << char(0xD9);
+                    } else {
+                        std::cout << char(0xC1); // "┴";
+                    }
+                } else {
+                    if(jndex == cols - 1) {
+                        std::cout << char(0xB4);
+                    } else {
+                        std::cout << char(0xC5); // "┼";
+                    }
+                }
+            }
+            std::cout << std::endl;
+        }
+    }
+
+    void printMatrix(size_t visibleX = 0) {
+        if(CONVERT_PRINT_TO_FILE) {
+            printMatrixFile(visibleX);
+        } else {
+            printMatrixConsole(visibleX);
+        }
+    }
+
     uint16_t getMinInRow(size_t row)
     {
         if(row < rows) {
@@ -178,6 +239,22 @@ class Matrix {
             std::cout << "Matrix not Square!" << std::endl;
         }
     }
+
+    void addRandomRestricts(int procentage = 50) {
+        if(isSquareMatrix()) {
+            for(size_t index = 0; index < rows; index++) {
+                for(size_t jndex = 0; jndex < cols; jndex++) {
+                    if(get_random_uint(0, 100) <= procentage) {
+                        // pass
+                        addRestrict(index, jndex);
+                    }
+                }
+            }
+        } else {
+            std::cout << "Matrix not Square!" << std::endl;
+        }
+    }
+
 };
 
 void debugPrintMinRows(Matrix *Obj)

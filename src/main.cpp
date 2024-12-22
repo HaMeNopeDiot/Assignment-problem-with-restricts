@@ -9,7 +9,8 @@
 #include "HopcroftKarp.hpp"
 
 
-
+#define SIZE_OF_MATIX    5
+#define PROCENT_RESTRICT 75
 
 void checkCol(
     Matrix A, 
@@ -72,8 +73,12 @@ Matrix byRandomize(size_t dim)
 {
     Matrix A(dim);
     A.randomizeAllMatrix();
-    A.addRestrictsCyclePath();
+    
+    // A.addRestrictsCyclePath();
 
+    // Добавляем ограничения в матрицу
+    A.addRandomRestricts(PROCENT_RESTRICT);
+    
     return A;
 }
 
@@ -109,20 +114,52 @@ void error(){
 void solve()
 {
     bool solved = false;
+    bool solveable = true;
 
-    Matrix A = byRandomize(30);
+    Matrix A = byRandomize(SIZE_OF_MATIX);
 
-    // Matrix A = byFileSet("ifiles/ex4.txt");
+    // Matrix A = byFileSet("ifiles/er2.txt");
 
     Matrix SourceMatrix = A;
 
-    debugPrintMinRows(&A);
-    debugPrintMinCols(&A);
 
-    
-    while(!solved) {
-        A.printMatrix(); 
+    // Посмотрим есть ли строки полностью из рестриктов
+    bool allRestrictRow = false;
+    for(size_t index = 0; index < A.getRows() && !allRestrictRow; index++) {
+        size_t restrict_cnt = 0;
+        for(size_t jndex = 0; jndex < A.getCols(); jndex++) {
+            if(A.getCell(index, jndex) == (uint16_t)(-1)) {
+                restrict_cnt++;
+            }
+        }
+        if(restrict_cnt == A.getDim()) {
+            allRestrictRow = true;
+        }
+    }
 
+    bool allRestrictCol = false;
+    if(!allRestrictRow) {
+        for(size_t index = 0; index < A.getRows() && !allRestrictCol; index++) {
+            size_t restrict_cnt = 0;
+            for(size_t jndex = 0; jndex < A.getCols(); jndex++) {
+                if(A.getCell(jndex, index) == (uint16_t)(-1)) {
+                    restrict_cnt++;
+                }
+            }
+            if(restrict_cnt == A.getDim()) {
+                allRestrictCol = true;
+            }
+        }
+    }
+
+    solveable = ((!allRestrictCol) & (!allRestrictRow));
+    std::cout << "Source Matrix" << std::endl;
+    A.printMatrix(); 
+
+    while(!solved && solveable) {
+        
+        debugPrintMinRows(&A);
+        debugPrintMinCols(&A);
         // Уменьшаем элементы построчно.
         for(size_t index = 0; index < A.getDim(); index++) {
             uint16_t minRowValue = A.getMinInRow(index);
@@ -256,60 +293,68 @@ void solve()
             }
             std::cout << std::endl;
 
-            // Заводим матрицу перекрестий
-            Matrix cross(A.getDim());
-            for(size_t index = 0; index < cross.getDim(); index++) {
-                
-                // Ищем строку в пометках
-                bool markedRow = false;
-                for(size_t jndex = 0; jndex < markedRows.size() && !markedRow; jndex++) {
-                    if(markedRows[jndex] == index) {
-                        markedRow = true;
-                    }  
+            std::cout << "SIZES: C: " << markedCols.size() << " R: " << markedRows.size() << std::endl; 
+
+            if(markedCols.size() == 0 && markedRows.size() == 0) {
+                // Увы, не решаемо :c
+                solveable = false;
+            } else {
+                // К счастью, решаемо
+                // Заводим матрицу перекрестий
+                Matrix cross(A.getDim());
+                for(size_t index = 0; index < cross.getDim(); index++) {
+                    
+                    // Ищем строку в пометках
+                    bool markedRow = false;
+                    for(size_t jndex = 0; jndex < markedRows.size() && !markedRow; jndex++) {
+                        if(markedRows[jndex] == index) {
+                            markedRow = true;
+                        }  
+                    }
+                    uint16_t valueR = markedRow? 0: 1;
+                    for(size_t jndex = 0; jndex < cross.getDim(); jndex++) {
+                        // есть ли помеченные столбцы
+                        bool markedCol = false;
+                        for(size_t kndex = 0; kndex < cross.getDim() && !markedCol; kndex++) {
+                            if(markedCols[kndex] == jndex) {
+                                markedCol = true;
+                            }
+                        }
+                        uint16_t valueC = markedCol? 1: 0;
+                        // Записываем сколько раз линии пересекли ячейку
+                        cross.setCell(index, jndex, valueC + valueR);
+                    }
                 }
-                uint16_t valueR = markedRow? 0: 1;
-                for(size_t jndex = 0; jndex < cross.getDim(); jndex++) {
-                    // есть ли помеченные столбцы
-                    bool markedCol = false;
-                    for(size_t kndex = 0; kndex < cross.getDim() && !markedCol; kndex++) {
-                        if(markedCols[kndex] == jndex) {
-                            markedCol = true;
+                // Посмотрим что вывелось
+                cross.printMatrix();
+
+                // Ищем минимальный элемент, который не пересекали матрицы
+                uint16_t minVal = -1;
+                for(size_t index = 0; index < A.getDim(); index++) {
+                    for(size_t jndex = 0; jndex < A.getDim(); jndex++) {
+                        uint16_t tmpVal = A.getCell(index, jndex);
+                        if(minVal > tmpVal && cross.getCell(index, jndex) == 0) {
+                            minVal = tmpVal;
                         }
                     }
-                    uint16_t valueC = markedCol? 1: 0;
-                    // Записываем сколько раз линии пересекли ячейку
-                    cross.setCell(index, jndex, valueC + valueR);
                 }
-            }
-            // Посмотрим что вывелось
-            cross.printMatrix();
+                std::cout << "MinVal: " << minVal << std::endl;
 
-            // Ищем минимальный элемент, который не пересекали матрицы
-            uint16_t minVal = -1;
-            for(size_t index = 0; index < A.getDim(); index++) {
-                for(size_t jndex = 0; jndex < A.getDim(); jndex++) {
-                    uint16_t tmpVal = A.getCell(index, jndex);
-                    if(minVal > tmpVal && cross.getCell(index, jndex) == 0) {
-                        minVal = tmpVal;
+                // Используем минимальный элемент на матрице
+                for(size_t index = 0; index < A.getDim(); index++) {
+                    for(size_t jndex = 0; jndex < A.getDim(); jndex++) {
+                        uint16_t curCell = A.getCell(index, jndex);
+                        if(cross.getCell(index, jndex) == 0) {
+                            A.setCell(index, jndex, curCell - minVal);
+                        }
+                        if(cross.getCell(index, jndex) == 2) {
+                            A.setCell(index, jndex, curCell + minVal);
+                        }
                     }
                 }
+                // Смотрим что получилось 
+                A.printMatrix();
             }
-            std::cout << "MinVal: " << minVal << std::endl;
-
-            // Используем минимальный элемент на матрице
-            for(size_t index = 0; index < A.getDim(); index++) {
-                for(size_t jndex = 0; jndex < A.getDim(); jndex++) {
-                    uint16_t curCell = A.getCell(index, jndex);
-                    if(cross.getCell(index, jndex) == 0) {
-                        A.setCell(index, jndex, curCell - minVal);
-                    }
-                    if(cross.getCell(index, jndex) == 2) {
-                        A.setCell(index, jndex, curCell + minVal);
-                    }
-                }
-            }
-            // Смотрим что получилось 
-            A.printMatrix();
         } else {
             solved = true;
 
@@ -339,12 +384,17 @@ void solve()
             std::cout << "answer: " << answerValue << std::endl;
         }
     }
+    if(!solveable) {
+        // если это не решаемо
+        std::cout << "Matrix not solveable" << std::endl;
+    }
 }
 
 int main() {   
     srand( time( 0 ) ); // автоматическая рандомизация
 
+    std::cout << "@@@ @@@ @@@ BUGAGA @@@ @@@ @@@" << std::endl;
     solve();
-
+    std::cout << "@@@ @@@ @@@ GETAKA @@@ @@@ @@@" << std::endl;
     return 0;
 }
